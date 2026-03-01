@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>다이어리 생성기 🛠️ (새 창 열기 버전)</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #f7f7f7; font-family: 'Apple SD Gothic Neo', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .setup-box { width: 100%; max-width: 800px; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 15px; }
+        .setup-box h3 { margin: 0 0 10px 0; color: #8d2e28; text-align: center; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
+        .form-group label { font-size: 13px; font-weight: bold; color: #555; }
+        .form-group input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .form-group input[type="file"] { font-size: 13px; }
+        
+        #downloadBox { display: none; text-align: center; background: #fff; padding: 40px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 600px; width: 100%; }
+        .open-btn { background-color: #8d2e28; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; box-shadow: 0 4px 10px rgba(141,46,40,0.2); width: 100%; }
+        .open-btn:hover { background-color: #722420; transform: translateY(-3px); }
+        #loadingMsg { display: none; color: #8d2e28; font-weight: bold; text-align: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="setup-box" id="setupBox">
+        <h3>💌 우리만의 다이어리 생성기 (새 창 버전)</h3>
+        <p style="text-align:center; font-size:13px; color:#777; margin-top:-10px;">파일 저장 없이 바로 새 창에서 다이어리를 확인하세요!</p>
+        
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1; border-color: #8d2e28; background-color: #fdf5f5;">
+                <label style="color: #8d2e28;">👤 화면에 띄울 내 풀네임</label>
+                <input type="text" id="myFullNameInput" value="은성">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>💬 txt 파일 속 내 이름</label>
+                <input type="text" id="myChatNameInput" value="성">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1; border-color: #8d2e28; background-color: #fdf5f5;">
+                <label style="color: #8d2e28;">👤 화면에 띄울 상대방 풀네임</label>
+                <input type="text" id="otherFullNameInput" value="성제">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>💬 txt 파일 속 상대방 이름</label>
+                <input type="text" id="otherChatNameInput" value="제">
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+                <label>📸 내 프로필 사진 (선택)</label>
+                <input type="file" id="myProfileInput" accept="image/*">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>📸 상대방 프로필 사진 (선택)</label>
+                <input type="file" id="otherProfileInput" accept="image/*">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>🖼️ 대화방에 보낸 사진들 (여러 개 동시 선택)</label>
+            <input type="file" id="imgFilesInput" accept="image/*" multiple>
+        </div>
+
+        <div class="form-group">
+            <label>📄 대화 텍스트 내용 (.txt) ✨마지막으로 선택해주세요✨</label>
+            <input type="file" id="txtFileInput" accept=".txt" multiple>
+        </div>
+        
+        <div id="loadingMsg">다이어리를 준비하는 중입니다... 잠시만 기다려주세요! ⏳</div>
+    </div>
+
+    <div id="downloadBox">
+        <h2 style="color: #8d2e28; margin-top:0;">🎉 준비 완료!</h2>
+        <p style="color: #555; line-height: 1.6; font-size: 15px;">
+            파일을 저장할 필요 없이 아래 버튼을 누르면<br>
+            새 페이지(새 탭)에서 예쁜 다이어리가 즉시 열립니다!
+        </p>
+        
+        <button class="open-btn" onclick="openInNewTab()">✨ 새 창에서 다이어리 바로 열기</button>
+        
+        <p style="font-size: 12px; color: #999; margin-top: 20px; text-decoration: underline; cursor: pointer;" onclick="location.reload()">새로 만들기 (초기화)</p>
+    </div>
+
+    <script>
+        const setupBox = document.getElementById('setupBox');
+        const downloadBox = document.getElementById('downloadBox');
+        const txtFileInput = document.getElementById('txtFileInput');
+        const loadingMsg = document.getElementById('loadingMsg');
+
+        const defaultProfileSvg = 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23cccccc"%3E%3Cpath d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/%3E%3C/svg%3E';
+
+        let appData = {
+            chatsByDate: {}, dateList: [], uploadedImages: {}, 
+            myFullName: "은성", myChatName: "성",
+            otherFullName: "성제", otherChatName: "제",
+            myProfileUrl: defaultProfileSvg, otherProfileUrl: defaultProfileSvg
+        };
+
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; 
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        resolve(canvas.toDataURL('image/jpeg', 0.8)); // 화질 80% 유지
+                    };
+                };
+            });
+        }
+
+        txtFileInput.addEventListener('change', async function() {
+            const txtFiles = this.files;
+            if (txtFiles.length === 0) return;
+
+            loadingMsg.style.display = 'block'; 
+
+            const myProfileFile = document.getElementById('myProfileInput').files[0];
+            const otherProfileFile = document.getElementById('otherProfileInput').files[0];
+            const imgFiles = document.getElementById('imgFilesInput').files;
+            
+            appData.myFullName = document.getElementById('myFullNameInput').value.trim();
+            appData.myChatName = document.getElementById('myChatNameInput').value.trim();
+            appData.otherFullName = document.getElementById('otherFullNameInput').value.trim();
+            appData.otherChatName = document.getElementById('otherChatNameInput').value.trim();
+
+            if (myProfileFile) appData.myProfileUrl = await compressImage(myProfileFile);
+            if (otherProfileFile) appData.otherProfileUrl = await compressImage(otherProfileFile);
+
+            appData.uploadedImages = {};
+            for (let i = 0; i < imgFiles.length; i++) {
+                const file = imgFiles[i];
+                const baseName = file.name.split('.')[0]; 
+                appData.uploadedImages[baseName] = await compressImage(file);
+            }
+
+            appData.chatsByDate = {};
+            appData.dateList = [];
+            let globalPhotoIndex = 0; 
+
+            let allLines = [];
+            for (let i = 0; i < txtFiles.length; i++) {
+                const text = await txtFiles[i].text();
+                allLines = allLines.concat(text.split('\n'));
+            }
+
+            let currentDate = "기록 시작";
+
+            allLines.forEach(line => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine) return;
+                if (trimmedLine.includes("님이 들어왔습니다.")) return;
+                if (trimmedLine.includes("님이 나갔습니다.")) return;
+                if (trimmedLine.includes("저장한 날짜 :")) return;
+                if (trimmedLine.includes("Talk_")) return;
+
+                const dateRegex = /^-*\s*([0-9]{4}년\s+[0-9]{1,2}월\s+[0-9]{1,2}일[가-힣\s]*)\s*-*$/;
+                const dateMatch = trimmedLine.match(dateRegex);
+                
+                if (dateMatch) {
+                    currentDate = dateMatch[1].trim();
+                    if (!appData.dateList.includes(currentDate)) {
+                        appData.dateList.push(currentDate);
+                        appData.chatsByDate[currentDate] = [];
+                    }
+                    return; 
+                }
+
+                const match = trimmedLine.match(/^([0-9\.\s가-힣a-zA-Z:]+),\s*(.*?)\s*:\s*(.*)/);
+
+                if (match) { 
+                    let fullDateStr = match[1].trim();
+                    let timeParts = fullDateStr.split('.'); 
+                    let timeStr = timeParts[timeParts.length - 1].trim();
+                    let name = match[2].trim(); 
+                    let msg = match[3].trim(); 
+                    let isPhoto = (msg === '사진' || msg === '[사진]' || msg === '사진 1장');
+                    
+                    let currentPhotoIndex = null;
+                    if (isPhoto) {
+                        globalPhotoIndex++;
+                        currentPhotoIndex = globalPhotoIndex;
+                    }
+
+                    if (!appData.dateList.includes(currentDate)) {
+                        appData.dateList.push(currentDate);
+                        appData.chatsByDate[currentDate] = [];
+                    }
+
+                    appData.chatsByDate[currentDate].push({
+                        type: 'msg', name: name, msg: msg, timeStr: timeStr,
+                        isPhoto: isPhoto, photoIndex: currentPhotoIndex
+                    });
+                } else {
+                    if (appData.chatsByDate[currentDate] && appData.chatsByDate[currentDate].length > 0) {
+                        let lastMsg = appData.chatsByDate[currentDate][appData.chatsByDate[currentDate].length - 1];
+                        if (!lastMsg.isPhoto) lastMsg.msg += '\n' + trimmedLine;
+                    }
+                }
+            });
+
+            appData.dateList.sort((a, b) => {
+                const parseDate = (str) => {
+                    const m = str.match(/([0-9]{4})년\s+([0-9]{1,2})월\s+([0-9]{1,2})일/);
+                    return m ? parseInt(m[1] + m[2].padStart(2, '0') + m[3].padStart(2, '0')) : 0;
+                };
+                return parseDate(a) - parseDate(b);
+            });
+
+            loadingMsg.style.display = 'none';
+            setupBox.style.display = 'none';
+            downloadBox.style.display = 'block';
+        });
+
+        function getFinalHtmlString() {
+            const dataString = JSON.stringify(appData).replace(/</g, '\\u003c'); 
+            
+            return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>소중한 기록 💌</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #f7f7f7; font-family: 'Apple SD Gothic Neo', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
+        
+        #lobbyView { width: 100%; max-width: 800px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; text-align: center; border: 1px solid #eaeaea; margin-top: 20px;}
+        #lobbyView h3 { margin: 0 0 5px 0; color: #8d2e28; font-size: 18px; }
+        #buttonList { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+        .date-btn { background-color: transparent; color: #333; border: 1px solid #dcdcdc; padding: 8px 4px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; letter-spacing: 0.5px; }
+        .date-btn:hover { color: #8d2e28; border-color: #8d2e28; background-color: #fdf5f5; transform: scale(1.05); }
+        
+        #chatView { width: 100%; max-width: 600px; display: none; flex-direction: column; margin-top: 10px; }
+        .back-btn { align-self: flex-start; background: #fff; border: 1px solid #ddd; padding: 10px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #333; cursor: pointer; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: 0.2s; }
+        .back-btn:hover { background: #8d2e28; color: #fff; border-color: #8d2e28; }
+        
+        .chat-box { width: 100%; display: flex; flex-direction: column; gap: 14px; padding-bottom: 40px; }
+        .date-divider { display: flex; justify-content: center; margin: 20px 0; width: 100%; }
+        .date-divider span { background-color: rgba(0, 0, 0, 0.15); color: #fff; font-size: 13px; font-weight: bold; padding: 6px 16px; border-radius: 20px; letter-spacing: 1px; }
+        .msg-container { display: flex; gap: 10px; width: 100%; align-items: flex-start; }
+        .msg-container.me { justify-content: flex-end; }
+        .msg-container.other { justify-content: flex-start; }
+        .profile-img { width: 42px; height: 42px; border-radius: 40%; object-fit: cover; flex-shrink: 0; border: 1px solid #eaeaea; background-color: #fff; }
+        .msg-content { display: flex; flex-direction: column; max-width: calc(100% - 52px); }
+        .me .msg-content { align-items: flex-end; }
+        .other .msg-content { align-items: flex-start; }
+        .name { font-size: 13px; color: #555; margin-bottom: 6px; padding: 0 4px; }
+        .bubble-wrapper { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+        .me .bubble-wrapper { flex-direction: row-reverse; } 
+        .other .bubble-wrapper { flex-direction: row; }
+        .time { font-size: 11px; color: #999; flex-shrink: 0; margin-bottom: 3px; }
+        .bubble { padding: 12px 16px; border-radius: 12px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.03); white-space: pre-wrap; word-wrap: break-word; word-break: break-all; overflow-wrap: anywhere; max-width: 100%; }
+        .me .bubble { background-color: #8d2e28; color: #ffffff; } 
+        .other .bubble { background-color: #ffffff; color: #333333; } 
+        .bubble.photo-bubble { padding: 0; background-color: transparent !important; box-shadow: none; }
+        .bubble.photo-bubble img { max-width: 250px; width: 100%; height: auto; border-radius: 12px; display: block; border: 1px solid #ddd; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+    <div id="lobbyView">
+        <h3>📅 소중한 날들</h3>
+        <p style="font-size: 13px; color: #777; margin-top: -5px; margin-bottom: 10px;">기록 타일을 누르면 대화가 열립니다.</p>
+        <div id="buttonList"></div>
+    </div>
+
+    <div id="chatView">
+        <button class="back-btn" onclick="closeChat()">🔙 목록으로 돌아가기</button>
+        <div id="chatContent" class="chat-box"></div>
+    </div>
+
+    <script id="diary-data" type="application/json">
+${dataString}
+    <\/script>
+
+    <script>
+        const rawData = document.getElementById('diary-data').textContent;
+        const appData = JSON.parse(rawData);
+
+        function formatYYMMDD(dateStr) {
+            const match = dateStr.match(/([0-9]{4})년\\s+([0-9]{1,2})월\\s+([0-9]{1,2})일/);
+            if (match) {
+                const y = match[1].substring(2); 
+                const m = match[2].padStart(2, '0');
+                const d = match[3].padStart(2, '0');
+                return y + m + d;
+            }
+            return dateStr; 
+        }
+
+        const buttonList = document.getElementById('buttonList');
+        appData.dateList.forEach(date => {
+            const btn = document.createElement('button');
+            btn.className = 'date-btn';
+            btn.innerText = formatYYMMDD(date); 
+            btn.onclick = function() { openChat(date); };
+            buttonList.appendChild(btn);
+        });
+
+        function openChat(dateString) {
+            document.getElementById('lobbyView').style.display = 'none';
+            document.getElementById('chatView').style.display = 'flex';
+            
+            const chatContent = document.getElementById('chatContent');
+            const msgs = appData.chatsByDate[dateString];
+            if (!msgs) return;
+
+            let html = "";
+            html += "<div class='date-divider'><span>" + formatYYMMDD(dateString) + "</span></div>";
+
+            msgs.forEach(data => {
+                let isMe = (data.name === appData.myChatName); 
+                let isOther = (data.name === appData.otherChatName);
+                if (!isMe && !isOther) {
+                    isMe = data.name.includes(appData.myChatName);
+                    isOther = data.name.includes(appData.otherChatName);
+                }
+
+                const alignClass = isMe ? 'me' : 'other';
+                const profileSrc = isMe ? appData.myProfileUrl : appData.otherProfileUrl;
+                const displayName = isMe ? appData.myFullName : (isOther ? appData.otherFullName : data.name);
+                
+                html += "<div class='msg-container " + alignClass + "'>";
+                if (!isMe) html += "<img class='profile-img' src='" + profileSrc + "' alt='profile'>";
+                html += "<div class='msg-content'>";
+                html += "<div class='name'>" + displayName + "</div>";
+                html += "<div class='bubble-wrapper'>";
+
+                let bubbleClass = 'bubble';
+                let bubbleContent = '';
+                if (data.isPhoto) {
+                    bubbleClass += ' photo-bubble';
+                    if (appData.uploadedImages[data.photoIndex.toString()]) {
+                        bubbleContent = "<img src='" + appData.uploadedImages[data.photoIndex.toString()] + "' alt='사진 " + data.photoIndex + "'>";
+                    } else {
+                        bubbleClass = 'bubble';
+                        bubbleContent = "(첨부된 사진 없음: " + data.photoIndex + ")";
+                    }
+                } else {
+                    bubbleContent = data.msg.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                }
+
+                html += "<div class='" + bubbleClass + "'>" + bubbleContent + "</div>";
+                html += "<span class='time'>" + data.timeStr + "</span>";
+                html += "</div></div>"; 
+                if (isMe) html += "<img class='profile-img' src='" + profileSrc + "' alt='profile'>";
+                html += "</div>"; 
+            });
+
+            chatContent.innerHTML = html;
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        }
+
+        function closeChat() {
+            document.getElementById('lobbyView').style.display = 'flex';
+            document.getElementById('chatView').style.display = 'none';
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        }
+    <\/script>
+</body>
+</html>`;
+        }
+
+        // 💡 핵심 기능: 파일 저장 없이 새 창(새 탭)에서 바로 열어버리기!
+        function openInNewTab() {
+            const finalHtml = getFinalHtmlString();
+            const newWindow = window.open('', '_blank');
+            
+            if (newWindow) {
+                newWindow.document.open();
+                newWindow.document.write(finalHtml);
+                newWindow.document.close();
+            } else {
+                // 브라우저 설정에서 팝업이 차단되어 있을 경우
+                alert("🚨 인터넷 브라우저 상단 주소창 쪽에 '팝업 차단됨' 아이콘이 떠 있을 겁니다! 팝업을 허용해주시고 다시 버튼을 눌러주세요.");
+            }
+        }
+    </script>
+</body>
+</html>
