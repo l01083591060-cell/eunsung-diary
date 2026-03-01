@@ -3,31 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>다이어리 생성기 🛠️ (바로 보기 버전)</title>
+    <title>우리의 다이어리 💌</title>
     <style>
         * { box-sizing: border-box; }
-        body { background-color: #f7f7f7; font-family: 'Apple SD Gothic Neo', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .setup-box { width: 100%; max-width: 800px; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 15px; }
+        body { background-color: #f7f7f7; font-family: 'Apple SD Gothic Neo', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
+        
+        /* 1. 설정창 (Setup) */
+        .setup-box { width: 100%; max-width: 800px; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 15px; margin-top: 50px; }
         .setup-box h3 { margin: 0 0 10px 0; color: #8d2e28; text-align: center; }
         .form-group { display: flex; flex-direction: column; gap: 5px; background: #fdfdfd; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
         .form-group label { font-size: 13px; font-weight: bold; color: #555; }
         .form-group input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         .form-group input[type="file"] { font-size: 13px; }
-        
-        #downloadBox { display: none; text-align: center; background: #fff; padding: 40px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 600px; width: 100%; }
-        
-        /* 💡 바로 화면 전환되는 버튼 스타일 */
-        .redirect-btn { background-color: #8d2e28; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; width: 100%; box-shadow: 0 4px 10px rgba(141,46,40,0.2); }
-        .redirect-btn:hover { background-color: #722420; transform: translateY(-3px); }
-        
+        .start-btn { background-color: #8d2e28; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; width: 100%; box-shadow: 0 4px 10px rgba(141,46,40,0.2); }
+        .start-btn:hover { background-color: #722420; transform: translateY(-3px); }
         #loadingMsg { display: none; color: #8d2e28; font-weight: bold; text-align: center; margin-top: 10px; }
+
+        /* 2. 로비창 (Lobby - 타일) */
+        #lobbyView { width: 100%; max-width: 800px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: none; flex-direction: column; gap: 15px; text-align: center; border: 1px solid #eaeaea; margin-top: 20px;}
+        #lobbyView h3 { margin: 0 0 5px 0; color: #8d2e28; font-size: 18px; }
+        #buttonList { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+        @media (max-width: 600px) { #buttonList { grid-template-columns: repeat(5, 1fr); } }
+        .date-btn { background-color: transparent; color: #333; border: 1px solid #dcdcdc; padding: 8px 4px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; letter-spacing: 0.5px; }
+        .date-btn:hover { color: #8d2e28; border-color: #8d2e28; background-color: #fdf5f5; transform: scale(1.05); }
+
+        /* 3. 채팅창 (Chat) */
+        #chatView { width: 100%; max-width: 600px; display: none; flex-direction: column; margin-top: 10px; }
+        .back-btn { align-self: flex-start; background: #fff; border: 1px solid #ddd; padding: 10px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #333; cursor: pointer; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: 0.2s; }
+        .back-btn:hover { background: #8d2e28; color: #fff; border-color: #8d2e28; }
+        .chat-box { width: 100%; display: flex; flex-direction: column; gap: 14px; padding-bottom: 40px; }
+        .date-divider { display: flex; justify-content: center; margin: 20px 0; width: 100%; }
+        .date-divider span { background-color: rgba(0, 0, 0, 0.15); color: #fff; font-size: 13px; font-weight: bold; padding: 6px 16px; border-radius: 20px; letter-spacing: 1px; }
+        .msg-container { display: flex; gap: 10px; width: 100%; align-items: flex-start; }
+        .msg-container.me { justify-content: flex-end; }
+        .msg-container.other { justify-content: flex-start; }
+        .profile-img { width: 42px; height: 42px; border-radius: 40%; object-fit: cover; flex-shrink: 0; border: 1px solid #eaeaea; background-color: #fff; }
+        .msg-content { display: flex; flex-direction: column; max-width: calc(100% - 52px); }
+        .me .msg-content { align-items: flex-end; }
+        .other .msg-content { align-items: flex-start; }
+        .name { font-size: 13px; color: #555; margin-bottom: 6px; padding: 0 4px; }
+        .bubble-wrapper { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+        .me .bubble-wrapper { flex-direction: row-reverse; } 
+        .other .bubble-wrapper { flex-direction: row; }
+        .time { font-size: 11px; color: #999; flex-shrink: 0; margin-bottom: 3px; }
+        .bubble { padding: 12px 16px; border-radius: 12px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.03); white-space: pre-wrap; word-wrap: break-word; word-break: break-all; overflow-wrap: anywhere; max-width: 100%; }
+        .me .bubble { background-color: #8d2e28; color: #ffffff; } 
+        .other .bubble { background-color: #ffffff; color: #333333; } 
+        .bubble.photo-bubble { padding: 0; background-color: transparent !important; box-shadow: none; }
+        .bubble.photo-bubble img { max-width: 250px; width: 100%; height: auto; border-radius: 12px; display: block; border: 1px solid #ddd; object-fit: cover; }
     </style>
 </head>
 <body>
 
     <div class="setup-box" id="setupBox">
-        <h3>💌 우리만의 다이어리 생성기 (화면 전환 버전)</h3>
-        <p style="text-align:center; font-size:13px; color:#777; margin-top:-10px;">파일 저장이나 새 창 없이, 이 화면이 바로 다이어리로 변합니다!</p>
+        <h3>💌 우리만의 다이어리 (뷰어 일체형)</h3>
+        <p style="text-align:center; font-size:13px; color:#777; margin-top:-10px;">파일을 넣고 열기를 누르면 이 화면이 앱처럼 바로 바뀝니다!</p>
         
         <div style="display: flex; gap: 10px;">
             <div class="form-group" style="flex: 1; border-color: #8d2e28; background-color: #fdf5f5;">
@@ -72,26 +102,30 @@
             <input type="file" id="txtFileInput" accept=".txt" multiple>
         </div>
         
-        <div id="loadingMsg">다이어리를 굽는 중입니다... 사진 용량을 줄이느라 조금 걸릴 수 있어요! ⏳</div>
+        <button class="start-btn" id="startBtn" onclick="processData()" style="display:none;">✨ 다이어리 바로 열기</button>
+        <div id="loadingMsg">다이어리를 준비하는 중입니다... 잠시만 기다려주세요! ⏳</div>
     </div>
 
-    <div id="downloadBox">
-        <h2 style="color: #8d2e28; margin-top:0;">🎉 준비 완료!</h2>
-        <p style="color: #555; line-height: 1.6; font-size: 15px;">
-            아래 버튼을 누르면 팝업창이나 다운로드 없이<br>
-            <b>지금 보고 계신 이 화면이 바로 다이어리로 바뀝니다!</b>
-        </p>
-        
-        <button class="redirect-btn" onclick="viewImmediately()">✨ 지금 이 화면에서 다이어리 바로 열기</button>
-        
-        <p style="font-size: 12px; color: #999; margin-top: 20px; text-decoration: underline; cursor: pointer;" onclick="location.reload()">새로 만들기 (초기화)</p>
+    <div id="lobbyView">
+        <h3>📅 소중한 날들</h3>
+        <p style="font-size: 13px; color: #777; margin-top: -5px; margin-bottom: 10px;">기록 타일을 누르면 대화가 열립니다.</p>
+        <div id="buttonList"></div>
+    </div>
+
+    <div id="chatView">
+        <button class="back-btn" onclick="closeChat()">🔙 목록으로 돌아가기</button>
+        <div id="chatContent" class="chat-box"></div>
     </div>
 
     <script>
         const setupBox = document.getElementById('setupBox');
-        const downloadBox = document.getElementById('downloadBox');
+        const lobbyView = document.getElementById('lobbyView');
+        const chatView = document.getElementById('chatView');
         const txtFileInput = document.getElementById('txtFileInput');
         const loadingMsg = document.getElementById('loadingMsg');
+        const startBtn = document.getElementById('startBtn');
+        const buttonList = document.getElementById('buttonList');
+        const chatContent = document.getElementById('chatContent');
 
         const defaultProfileSvg = 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23cccccc"%3E%3Cpath d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/%3E%3C/svg%3E';
 
@@ -101,6 +135,13 @@
             otherFullName: "성제", otherChatName: "제",
             myProfileUrl: defaultProfileSvg, otherProfileUrl: defaultProfileSvg
         };
+
+        // txt 파일이 들어가면 열기 버튼 띄우기
+        txtFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                startBtn.style.display = 'block';
+            }
+        });
 
         function compressImage(file) {
             return new Promise((resolve) => {
@@ -124,17 +165,17 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        
                         resolve(canvas.toDataURL('image/jpeg', 0.8));
                     };
                 };
             });
         }
 
-        txtFileInput.addEventListener('change', async function() {
-            const txtFiles = this.files;
+        async function processData() {
+            const txtFiles = txtFileInput.files;
             if (txtFiles.length === 0) return;
 
+            startBtn.style.display = 'none';
             loadingMsg.style.display = 'block'; 
 
             const myProfileFile = document.getElementById('myProfileInput').files[0];
@@ -229,79 +270,12 @@
                 return parseDate(a) - parseDate(b);
             });
 
-            loadingMsg.style.display = 'none';
-            setupBox.style.display = 'none';
-            downloadBox.style.display = 'block';
-        });
-
-        function getFinalHtmlString() {
-            const dataString = JSON.stringify(appData).replace(/</g, '\\u003c'); 
-            
-            return `<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>소중한 기록 💌</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { background-color: #f7f7f7; font-family: 'Apple SD Gothic Neo', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
-        
-        #lobbyView { width: 100%; max-width: 800px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; text-align: center; border: 1px solid #eaeaea; margin-top: 20px;}
-        #lobbyView h3 { margin: 0 0 5px 0; color: #8d2e28; font-size: 18px; }
-        #buttonList { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
-        .date-btn { background-color: transparent; color: #333; border: 1px solid #dcdcdc; padding: 8px 4px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center; aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; letter-spacing: 0.5px; }
-        .date-btn:hover { color: #8d2e28; border-color: #8d2e28; background-color: #fdf5f5; transform: scale(1.05); }
-        
-        #chatView { width: 100%; max-width: 600px; display: none; flex-direction: column; margin-top: 10px; }
-        .back-btn { align-self: flex-start; background: #fff; border: 1px solid #ddd; padding: 10px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #333; cursor: pointer; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: 0.2s; }
-        .back-btn:hover { background: #8d2e28; color: #fff; border-color: #8d2e28; }
-        
-        .chat-box { width: 100%; display: flex; flex-direction: column; gap: 14px; padding-bottom: 40px; }
-        .date-divider { display: flex; justify-content: center; margin: 20px 0; width: 100%; }
-        .date-divider span { background-color: rgba(0, 0, 0, 0.15); color: #fff; font-size: 13px; font-weight: bold; padding: 6px 16px; border-radius: 20px; letter-spacing: 1px; }
-        .msg-container { display: flex; gap: 10px; width: 100%; align-items: flex-start; }
-        .msg-container.me { justify-content: flex-end; }
-        .msg-container.other { justify-content: flex-start; }
-        .profile-img { width: 42px; height: 42px; border-radius: 40%; object-fit: cover; flex-shrink: 0; border: 1px solid #eaeaea; background-color: #fff; }
-        .msg-content { display: flex; flex-direction: column; max-width: calc(100% - 52px); }
-        .me .msg-content { align-items: flex-end; }
-        .other .msg-content { align-items: flex-start; }
-        .name { font-size: 13px; color: #555; margin-bottom: 6px; padding: 0 4px; }
-        .bubble-wrapper { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
-        .me .bubble-wrapper { flex-direction: row-reverse; } 
-        .other .bubble-wrapper { flex-direction: row; }
-        .time { font-size: 11px; color: #999; flex-shrink: 0; margin-bottom: 3px; }
-        .bubble { padding: 12px 16px; border-radius: 12px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.03); white-space: pre-wrap; word-wrap: break-word; word-break: break-all; overflow-wrap: anywhere; max-width: 100%; }
-        .me .bubble { background-color: #8d2e28; color: #ffffff; } 
-        .other .bubble { background-color: #ffffff; color: #333333; } 
-        .bubble.photo-bubble { padding: 0; background-color: transparent !important; box-shadow: none; }
-        .bubble.photo-bubble img { max-width: 250px; width: 100%; height: auto; border-radius: 12px; display: block; border: 1px solid #ddd; object-fit: cover; }
-    </style>
-</head>
-<body>
-
-    <div id="lobbyView">
-        <h3>📅 소중한 날들</h3>
-        <p style="font-size: 13px; color: #777; margin-top: -5px; margin-bottom: 10px;">기록 타일을 누르면 대화가 열립니다.</p>
-        <div id="buttonList"></div>
-    </div>
-
-    <div id="chatView">
-        <button class="back-btn" onclick="closeChat()">🔙 목록으로 돌아가기</button>
-        <div id="chatContent" class="chat-box"></div>
-    </div>
-
-    <script id="diary-data" type="application/json">
-${dataString}
-    <\/script>
-
-    <script>
-        const rawData = document.getElementById('diary-data').textContent;
-        const appData = JSON.parse(rawData);
+            // 데이터 처리 완료 후 로비 화면으로 전환!
+            renderLobby();
+        }
 
         function formatYYMMDD(dateStr) {
-            const match = dateStr.match(/([0-9]{4})년\\s+([0-9]{1,2})월\\s+([0-9]{1,2})일/);
+            const match = dateStr.match(/([0-9]{4})년\s+([0-9]{1,2})월\s+([0-9]{1,2})일/);
             if (match) {
                 const y = match[1].substring(2); 
                 const m = match[2].padStart(2, '0');
@@ -311,20 +285,31 @@ ${dataString}
             return dateStr; 
         }
 
-        const buttonList = document.getElementById('buttonList');
-        appData.dateList.forEach(date => {
-            const btn = document.createElement('button');
-            btn.className = 'date-btn';
-            btn.innerText = formatYYMMDD(date); 
-            btn.onclick = function() { openChat(date); };
-            buttonList.appendChild(btn);
-        });
+        // 💡 핵심: 복잡한 변환 없이 설정창을 끄고 타일창을 바로 켜버립니다!
+        function renderLobby() {
+            setupBox.style.display = 'none';
+            lobbyView.style.display = 'flex';
+            buttonList.innerHTML = '';
+
+            if (appData.dateList.length === 0) {
+                buttonList.innerHTML = '<p style="grid-column: 1 / -1; color: #888;">텍스트 파일에서 대화 날짜를 찾지 못했습니다.</p>';
+                return;
+            }
+
+            appData.dateList.forEach(date => {
+                const btn = document.createElement('button');
+                btn.className = 'date-btn';
+                btn.innerText = formatYYMMDD(date); 
+                btn.onclick = function() { openChat(date); };
+                buttonList.appendChild(btn);
+            });
+            window.scrollTo(0,0);
+        }
 
         function openChat(dateString) {
-            document.getElementById('lobbyView').style.display = 'none';
-            document.getElementById('chatView').style.display = 'flex';
+            lobbyView.style.display = 'none';
+            chatView.style.display = 'flex';
             
-            const chatContent = document.getElementById('chatContent');
             const msgs = appData.chatsByDate[dateString];
             if (!msgs) return;
 
@@ -371,27 +356,13 @@ ${dataString}
             });
 
             chatContent.innerHTML = html;
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
+            window.scrollTo(0,0);
         }
 
         function closeChat() {
-            document.getElementById('lobbyView').style.display = 'flex';
-            document.getElementById('chatView').style.display = 'none';
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
-        }
-    <\/script>
-</body>
-</html>`;
-        }
-
-        // 💡 핵심 기능: 현재 화면을 통째로 생성된 다이어리로 덮어쓰기 (리다이렉션)
-        function viewImmediately() {
-            const finalHtml = getFinalHtmlString();
-            document.open();
-            document.write(finalHtml);
-            document.close();
+            lobbyView.style.display = 'flex';
+            chatView.style.display = 'none';
+            window.scrollTo(0,0);
         }
     </script>
 </body>
