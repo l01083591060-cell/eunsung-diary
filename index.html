@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>다이어리 생성기 🛠️ (새 창 열기 버전)</title>
+    <title>다이어리 생성기 🛠️ (바로 보기 버전)</title>
     <style>
         * { box-sizing: border-box; }
         body { background-color: #f7f7f7; font-family: 'Apple SD Gothic Neo', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
@@ -15,16 +15,19 @@
         .form-group input[type="file"] { font-size: 13px; }
         
         #downloadBox { display: none; text-align: center; background: #fff; padding: 40px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 600px; width: 100%; }
-        .open-btn { background-color: #8d2e28; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; box-shadow: 0 4px 10px rgba(141,46,40,0.2); width: 100%; }
-        .open-btn:hover { background-color: #722420; transform: translateY(-3px); }
+        
+        /* 💡 바로 화면 전환되는 버튼 스타일 */
+        .redirect-btn { background-color: #8d2e28; color: white; border: none; padding: 16px 20px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; width: 100%; box-shadow: 0 4px 10px rgba(141,46,40,0.2); }
+        .redirect-btn:hover { background-color: #722420; transform: translateY(-3px); }
+        
         #loadingMsg { display: none; color: #8d2e28; font-weight: bold; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="setup-box" id="setupBox">
-        <h3>💌 우리만의 다이어리 생성기 (새 창 버전)</h3>
-        <p style="text-align:center; font-size:13px; color:#777; margin-top:-10px;">파일 저장 없이 바로 새 창에서 다이어리를 확인하세요!</p>
+        <h3>💌 우리만의 다이어리 생성기 (화면 전환 버전)</h3>
+        <p style="text-align:center; font-size:13px; color:#777; margin-top:-10px;">파일 저장이나 새 창 없이, 이 화면이 바로 다이어리로 변합니다!</p>
         
         <div style="display: flex; gap: 10px;">
             <div class="form-group" style="flex: 1; border-color: #8d2e28; background-color: #fdf5f5;">
@@ -69,17 +72,17 @@
             <input type="file" id="txtFileInput" accept=".txt" multiple>
         </div>
         
-        <div id="loadingMsg">다이어리를 준비하는 중입니다... 잠시만 기다려주세요! ⏳</div>
+        <div id="loadingMsg">다이어리를 굽는 중입니다... 사진 용량을 줄이느라 조금 걸릴 수 있어요! ⏳</div>
     </div>
 
     <div id="downloadBox">
         <h2 style="color: #8d2e28; margin-top:0;">🎉 준비 완료!</h2>
         <p style="color: #555; line-height: 1.6; font-size: 15px;">
-            파일을 저장할 필요 없이 아래 버튼을 누르면<br>
-            새 페이지(새 탭)에서 예쁜 다이어리가 즉시 열립니다!
+            아래 버튼을 누르면 팝업창이나 다운로드 없이<br>
+            <b>지금 보고 계신 이 화면이 바로 다이어리로 바뀝니다!</b>
         </p>
         
-        <button class="open-btn" onclick="openInNewTab()">✨ 새 창에서 다이어리 바로 열기</button>
+        <button class="redirect-btn" onclick="viewImmediately()">✨ 지금 이 화면에서 다이어리 바로 열기</button>
         
         <p style="font-size: 12px; color: #999; margin-top: 20px; text-decoration: underline; cursor: pointer;" onclick="location.reload()">새로 만들기 (초기화)</p>
     </div>
@@ -122,7 +125,7 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        resolve(canvas.toDataURL('image/jpeg', 0.8)); // 화질 80% 유지
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
                     };
                 };
             });
@@ -383,19 +386,12 @@ ${dataString}
 </html>`;
         }
 
-        // 💡 핵심 기능: 파일 저장 없이 새 창(새 탭)에서 바로 열어버리기!
-        function openInNewTab() {
+        // 💡 핵심 기능: 현재 화면을 통째로 생성된 다이어리로 덮어쓰기 (리다이렉션)
+        function viewImmediately() {
             const finalHtml = getFinalHtmlString();
-            const newWindow = window.open('', '_blank');
-            
-            if (newWindow) {
-                newWindow.document.open();
-                newWindow.document.write(finalHtml);
-                newWindow.document.close();
-            } else {
-                // 브라우저 설정에서 팝업이 차단되어 있을 경우
-                alert("🚨 인터넷 브라우저 상단 주소창 쪽에 '팝업 차단됨' 아이콘이 떠 있을 겁니다! 팝업을 허용해주시고 다시 버튼을 눌러주세요.");
-            }
+            document.open();
+            document.write(finalHtml);
+            document.close();
         }
     </script>
 </body>
